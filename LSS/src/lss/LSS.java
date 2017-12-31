@@ -32,7 +32,7 @@ public class LSS {
         String c[] = new String[]{"C1", "C2","C3"};
 
         SolverCore s = new SolverCore(x, y, f, c, Method.GAUSS_JORDAN, Pivot.TOTAL);
-
+        System.out.println(s.getSteps());
     }
 
 }

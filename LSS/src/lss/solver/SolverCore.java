@@ -21,7 +21,7 @@ public class SolverCore {
     private final Vector Y;
     private final GenericVector<Function> F;
     private final Vector S;
-    private String steps;
+    private String STEPS;
     private final Matrix A;
     private final Vector B;
     private final GenericVector<String> C;
@@ -48,7 +48,7 @@ public class SolverCore {
         reduce(s);
         substitution(s);
         conclude(s);
-        System.out.println(s.toString());
+        STEPS = s.toString();
     }
 
     private void buildMatrices(StringBuilder sb) {
@@ -246,13 +246,13 @@ public class SolverCore {
         }
         for (int k = N - 1; k > 0; k--) {
             sb.append("\nStep: ")
-                    .append(k + N);
+                    .append(N-1+(N-k));
             for (int i = k - 1; i >= 0; i--) {
                 sb.append("\n\tRow: ").
                         append(i + 1);
                 double m = -(A.getElem(i, k) / A.getElem(k, k));
                 sb.append("\n\tm")
-                        .append(k + N)
+                        .append(N-1+(N-k))
                         .append(i + 1)
                         .append("=")
                         .append(m);
@@ -268,7 +268,7 @@ public class SolverCore {
         sb.append("Part 4: Substitution");
         if (METHOD.equals(Method.GAUSS)) {
             gaussSubstitution(sb);
-        }else{
+        } else {
             gaussJordanSubstitution(sb);
         }
     }
@@ -285,11 +285,11 @@ public class SolverCore {
         }
         sb.append(C.showEqualed(S));
     }
-    
-    private void gaussJordanSubstitution(StringBuilder sb){
+
+    private void gaussJordanSubstitution(StringBuilder sb) {
         int N = F.size();
-        for (int i =0;i<N;i++){
-            S.setElem(i, B.getElem(i)/A.getElem(i, i));
+        for (int i = 0; i < N; i++) {
+            S.setElem(i, B.getElem(i) / A.getElem(i, i));
         }
         sb.append(C.showEqualed(S));
     }
@@ -339,7 +339,7 @@ public class SolverCore {
         return sb.toString().replace("+ -", "- ");
     }
 
-    public String showABC() {
+    private String showABC() {
         StringBuilder s = new StringBuilder();
         s.append(showAB());
         s.append("C:\n");
@@ -347,7 +347,7 @@ public class SolverCore {
         return s.toString();
     }
 
-    public String showAB() {
+    private String showAB() {
         StringBuilder s = new StringBuilder();
         s.append("\nA:\n");
         s.append(A);
@@ -356,12 +356,16 @@ public class SolverCore {
         return s.toString();
     }
 
-    public String showAC() {
+    private String showAC() {
         StringBuilder s = new StringBuilder();
         s.append("\nA:\n");
         s.append(A);
         s.append("C:\n");
         s.append(C);
         return s.toString();
+    }
+
+    public String getSteps() {
+        return STEPS;
     }
 }
