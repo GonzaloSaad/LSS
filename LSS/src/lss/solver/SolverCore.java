@@ -5,9 +5,10 @@
  */
 package lss.solver;
 
+import java.text.DecimalFormat;
 import lss.solver.mathematics.Function;
 import lss.solver.mathematics.Matrix;
-import lss.solver.mathematics.StringVector;
+import lss.solver.mathematics.GenericVector;
 import lss.solver.mathematics.Vector;
 
 /**
@@ -18,22 +19,23 @@ public class SolverCore {
 
     private final Vector X;
     private final Vector Y;
-    private final Function[] FUNCTIONS;
-    private double solution[];
+    private final GenericVector<Function> F;
+    private final Vector S;
     private String steps;
     private final Matrix A;
     private final Vector B;
-    private final StringVector C;
+    private final GenericVector<String> C;
     private final Method METHOD;
     private final Pivot PIVOT;
 
     public SolverCore(double x[], double y[], Function functions[], String constants[], Method method, Pivot pivot) {
         X = new Vector(x);
         Y = new Vector(y);
-        FUNCTIONS = functions;
-        A = new Matrix(FUNCTIONS.length);
-        B = new Vector(FUNCTIONS.length);
-        C = new StringVector(constants);
+        F = new GenericVector(functions);
+        A = new Matrix(F.size());
+        B = new Vector(F.size());
+        C = new GenericVector(constants);
+        S = new Vector(F.size());
         PIVOT = pivot;
         METHOD = method;
         solve();
@@ -43,17 +45,20 @@ public class SolverCore {
         StringBuilder s = new StringBuilder();
         buildMatrices(s);
         pivot(s);
+        reduce(s);
+        substitution(s);
+        conclude(s);
         System.out.println(s.toString());
     }
 
     private void buildMatrices(StringBuilder sb) {
-        int N = FUNCTIONS.length;
+        int N = F.size();
         int M = X.size();
 
         Matrix R = new Matrix(M, N);
 
         for (int i = 0; i < N; i++) {
-            R.copyVectorToColumn(i, X.operateFunction(FUNCTIONS[i]));
+            R.copyVectorToColumn(i, X.operateFunction(F.getElem(i)));
         }
 
         for (int i = 0; i < N; i++) {
@@ -63,12 +68,7 @@ public class SolverCore {
             }
         }
         sb.append("Step 1: Building the matrices.\n");
-        sb.append("A:\n");
-        sb.append(A);
-        sb.append("B:\n");
-        sb.append(B);
-        sb.append("C:\n");
-        sb.append(C);
+        sb.append(showABC());
 
     }
 
@@ -86,14 +86,11 @@ public class SolverCore {
                 sb.append("\nNo partial pivot is needed! One less step.");
             }
 
+        } else if (A.needsTotalPivot()) {
+            sb.append("Total pivot.");
+            totalPivot(sb);
         } else {
-            if (A.needsTotalPivot()) {
-                sb.append("Total pivot.");
-                totalPivot(sb);
-            } else {
-                sb.append("\nNo need for total pivot! One less step!");
-            }
-
+            sb.append("\nNo need for total pivot! One less step!");
         }
 
     }
@@ -110,6 +107,7 @@ public class SolverCore {
 
             A.colOperation(0, jmax);
             C.operation(0, jmax);
+            F.operation(0, jmax);
 
             sb.append("\nMaximum value in [").
                     append("1,")
@@ -122,10 +120,7 @@ public class SolverCore {
             sb.append("\n\t\t2)Change element 1 with element ")
                     .append(jmax + 1)
                     .append(" in 'C' vector.\n");
-            sb.append("A:\n");
-            sb.append(A);
-            sb.append("C:\n");
-            sb.append(C);
+            sb.append(showAC());
 
         } else {
             A.rowOperation(0, imax);
@@ -142,10 +137,7 @@ public class SolverCore {
             sb.append("\n\t\t2)Change element 1 with element ")
                     .append(imax + 1)
                     .append(" in 'B' vector.\n");
-            sb.append("A:\n");
-            sb.append(A);
-            sb.append("B:\n");
-            sb.append(B);
+            sb.append(showAB());
 
         }
 
@@ -180,6 +172,7 @@ public class SolverCore {
         if (jmax != 0) {
             A.colOperation(0, jmax);
             C.operation(0, jmax);
+            F.operation(0, jmax);
             sb.append("\n\tColumns:");
             sb.append("\n\t\t1)Change column 1 with column ")
                     .append(jmax + 1)
@@ -191,16 +184,184 @@ public class SolverCore {
             sb.append("No movement required for columns!\n");
         }
 
-        sb.append("A:\n");
-        sb.append(A);
-        sb.append("B:\n");
-        sb.append(B);
-        sb.append("C:\n");
-        sb.append(C);
+        sb.append(showABC());
 
     }
 
     private void reduce(StringBuilder sb) {
+        sb.append("\nPart 3: Reduce system.")
+                .append("\nMethod:\t");
+        if (METHOD.equals(Method.GAUSS)) {
+            sb.append("Gauss");
+            gauss(sb);
+        } else {
+            sb.append("Gauss-Jordan");
+            gaussJordan(sb);
+        }
+    }
 
+    private void gauss(StringBuilder sb) {
+        int N = F.size();
+        for (int k = 0; k < N - 1; k++) {
+            sb.append("\nStep: ")
+                    .append(k + 1);
+            for (int i = k + 1; i < N; i++) {
+                sb.append("\n\tRow: ").
+                        append(i + 1);
+                double m = -(A.getElem(i, k) / A.getElem(k, k));
+                sb.append("\n\tm")
+                        .append(k + 1)
+                        .append(i + 1)
+                        .append("=")
+                        .append(m);
+                B.operation(i, k, m);
+                A.rowOperation(i, k, m);
+                sb.append(showAB());
+
+            }
+        }
+    }
+
+    private void gaussJordan(StringBuilder sb) {
+        int N = F.size();
+
+        for (int k = 0; k < N - 1; k++) {
+            sb.append("\nStep: ")
+                    .append(k + 1);
+            for (int i = k + 1; i < N; i++) {
+                sb.append("\n\tRow: ").
+                        append(i + 1);
+                double m = -(A.getElem(i, k) / A.getElem(k, k));
+                sb.append("\n\tm")
+                        .append(k + 1)
+                        .append(i + 1)
+                        .append("=")
+                        .append(m);
+                B.operation(i, k, m);
+                A.rowOperation(i, k, m);
+                sb.append(showAB());
+
+            }
+
+        }
+        for (int k = N - 1; k > 0; k--) {
+            sb.append("\nStep: ")
+                    .append(k + N);
+            for (int i = k - 1; i >= 0; i--) {
+                sb.append("\n\tRow: ").
+                        append(i + 1);
+                double m = -(A.getElem(i, k) / A.getElem(k, k));
+                sb.append("\n\tm")
+                        .append(k + N)
+                        .append(i + 1)
+                        .append("=")
+                        .append(m);
+                B.operation(i, k, m);
+                A.rowOperation(i, k, m);
+                sb.append(showAB());
+            }
+
+        }
+    }
+
+    private void substitution(StringBuilder sb) {
+        sb.append("Part 4: Substitution");
+        if (METHOD.equals(Method.GAUSS)) {
+            gaussSubstitution(sb);
+        }else{
+            gaussJordanSubstitution(sb);
+        }
+    }
+
+    private void gaussSubstitution(StringBuilder sb) {
+        int N = F.size();
+
+        for (int i = N - 1; i >= 0; i--) {
+            double sum = 0;
+            for (int j = N - 1; j > i; j--) {
+                sum += S.getElem(j) * A.getElem(i, j);
+            }
+            S.setElem(i, (B.getElem(i) - sum) / A.getElem(i, i));
+        }
+        sb.append(C.showEqualed(S));
+    }
+    
+    private void gaussJordanSubstitution(StringBuilder sb){
+        int N = F.size();
+        for (int i =0;i<N;i++){
+            S.setElem(i, B.getElem(i)/A.getElem(i, i));
+        }
+        sb.append(C.showEqualed(S));
+    }
+
+    private void conclude(StringBuilder sb) {
+        sb.append("\nError:\t")
+                .append(this.error());
+        sb.append("\nFinal expression:\t")
+                .append(this.getFinalExpression());
+    }
+
+    public double error() {
+        double s = 0;
+        Function f = this.buildCompleteFunction();
+        for (int i = 0; i < X.size(); i++) {
+            s += Math.pow(f.apply(new double[]{X.getElem(i)}) - Y.getElem(i), 2);
+        }
+        return s;
+    }
+
+    private Function buildCompleteFunction() {
+        StringBuilder sb = new StringBuilder("F(x)=");
+        for (int i = 0; i < F.size(); i++) {
+            sb.append(S.getElem(i))
+                    .append("*")
+                    .append(F.getElem(i).getExpression());
+            if (i != F.size() - 1) {
+                sb.append("+");
+            }
+
+        }
+        return new Function(sb.toString());
+    }
+
+    public String getFinalExpression() {
+        DecimalFormat df = new DecimalFormat("#.####");
+        StringBuilder sb = new StringBuilder("F(x) = ");
+        for (int i = 0; i < F.size(); i++) {
+            sb.append(df.format(S.getElem(i)))
+                    .append(" * ")
+                    .append(F.getElem(i).getExpression());
+            if (i != F.size() - 1) {
+                sb.append(" + ");
+            }
+
+        }
+        return sb.toString().replace("+ -", "- ");
+    }
+
+    public String showABC() {
+        StringBuilder s = new StringBuilder();
+        s.append(showAB());
+        s.append("C:\n");
+        s.append(C);
+        return s.toString();
+    }
+
+    public String showAB() {
+        StringBuilder s = new StringBuilder();
+        s.append("\nA:\n");
+        s.append(A);
+        s.append("B:\n");
+        s.append(B);
+        return s.toString();
+    }
+
+    public String showAC() {
+        StringBuilder s = new StringBuilder();
+        s.append("\nA:\n");
+        s.append(A);
+        s.append("C:\n");
+        s.append(C);
+        return s.toString();
     }
 }

@@ -21,16 +21,17 @@ public class LSS {
      */
     public static void main(String[] args) {
         // TODO code application logic here
-        double[] x = new double[]{1, 2, 3};
-        double[] y = new double[]{3, 5, 7};
+        double[] x = new double[]{-1, 3, 15};
+        double[] y = new double[]{0,20,0};
 
-        Function f1 = new Function("f(x)=sin(x)");
-        Function f2 = new Function("f(x)=x");
-        Function f3 = new Function("f(x)=x^2");
-        Function f[] = new Function[]{f1, f2, f3};
-        String c[] = new String[]{"C1", "C2", "C3"};
+        
+        Function f1 = new Function("f(x)=x^2");
+        Function f2 = new Function("f(x)=1");
+        Function f3 = new Function("f(x)=x^3");
+        Function f[] = new Function[]{ f1, f2,f3};
+        String c[] = new String[]{"C1", "C2","C3"};
 
-        SolverCore s = new SolverCore(x, y, f, c, Method.GAUSS, Pivot.TOTAL);
+        SolverCore s = new SolverCore(x, y, f, c, Method.GAUSS_JORDAN, Pivot.TOTAL);
 
     }
 

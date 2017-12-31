@@ -69,5 +69,9 @@ public class Function {
     public String getName() {
         return name;
     }
+    
+    public String getExpression(){
+        return this.expressionString;
+    }
 
 }

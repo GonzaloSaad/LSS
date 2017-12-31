@@ -213,7 +213,7 @@ public class Matrix {
             throw new IllegalArgumentException("Vector must be same size that column.");
         }
 
-        for (int i = 0; i < COLS; i++) {
+        for (int i = 0; i < ROWS; i++) {
             matrix[i][col] = v.getElem(i);
         }
     }

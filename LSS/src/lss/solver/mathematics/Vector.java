@@ -45,7 +45,7 @@ public class Vector {
         return vector[index];
     }
 
-    public void operation(int index1, int index2, int scalar) {
+    public void operation(int index1, int index2, double scalar) {
         vector[index1] += scalar * vector[index2];
     }
 
@@ -96,17 +96,18 @@ public class Vector {
     }
 
     public Vector operateFunction(Function f) {
-        double res[] = new double[this.size()];
+        Vector res = new Vector(this.size());
         for (int i = 0; i < this.size(); i++) {
-            res[i] = f.apply(new double[]{vector[i]});
+            res.setElem(i, f.apply(new double[]{vector[i]}));
         }
-        return new Vector(res);
+        return res;
     }
 
     public double[] getVector() {
         return vector;
     }
 
+    @Override
     public String toString() {
         StringBuilder s = new StringBuilder();
         DecimalFormat df = new DecimalFormat("#.####");
