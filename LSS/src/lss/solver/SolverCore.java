@@ -6,6 +6,7 @@
 package lss.solver;
 
 import java.text.DecimalFormat;
+import lss.solver.entryparser.EntryParser;
 import lss.solver.mathematics.Function;
 import lss.solver.mathematics.Matrix;
 import lss.solver.mathematics.GenericVector;
@@ -35,6 +36,20 @@ public class SolverCore {
         A = new Matrix(F.size());
         B = new Vector(F.size());
         C = new GenericVector(constants);
+        S = new Vector(F.size());
+        PIVOT = pivot;
+        METHOD = method;
+        solve();
+    }
+
+    public SolverCore(double x[], double y[], String input, Method method, Pivot pivot) {
+        EntryParser ep = new EntryParser(input);
+        X = new Vector(x);
+        Y = new Vector(y);
+        F = new GenericVector(ep.getFunctionsArray());
+        A = new Matrix(F.size());
+        B = new Vector(F.size());
+        C = new GenericVector(ep.getConstantsArray());
         S = new Vector(F.size());
         PIVOT = pivot;
         METHOD = method;
@@ -246,13 +261,13 @@ public class SolverCore {
         }
         for (int k = N - 1; k > 0; k--) {
             sb.append("\nStep: ")
-                    .append(N-1+(N-k));
+                    .append(N - 1 + (N - k));
             for (int i = k - 1; i >= 0; i--) {
                 sb.append("\n\tRow: ").
                         append(i + 1);
                 double m = -(A.getElem(i, k) / A.getElem(k, k));
                 sb.append("\n\tm")
-                        .append(N-1+(N-k))
+                        .append(N - 1 + (N - k))
                         .append(i + 1)
                         .append("=")
                         .append(m);
@@ -368,4 +383,5 @@ public class SolverCore {
     public String getSteps() {
         return STEPS;
     }
+
 }

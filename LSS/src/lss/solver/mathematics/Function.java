@@ -16,15 +16,26 @@ import net.objecthunter.exp4j.ExpressionBuilder;
  */
 public class Function {
 
-    private final String name;
-    private final String[] arguments;
+    private String name;
+    private String[] arguments;
     private final String expressionString;
     private Expression expression;
 
     public Function(String function) {
         String header = function.split("=")[0];
-        name = header.substring(0, 1);
-        arguments = header.substring(2, header.length() - 1).split(",");
+
+        if (!header.matches("[a-zA-Z][0-9]*\\((([a-z],)*[a-z])\\)")) {
+            throw new IllegalArgumentException("The header of the function is not correct");
+        }
+
+        for (int i = 0; i < header.length(); i++) {
+            if (header.charAt(i) == '(') {
+                name = header.substring(0, i);
+                arguments = header.substring(i + 1, header.length() - 1).split(",");
+                break;
+            }
+        }
+
         expressionString = function.split("=")[1];
 
         this.createExpression();
@@ -69,9 +80,21 @@ public class Function {
     public String getName() {
         return name;
     }
-    
-    public String getExpression(){
+
+    public String getExpression() {
         return this.expressionString;
+    }
+    
+    @Override
+    public String toString(){
+        StringBuilder sb = new StringBuilder();
+        sb.append(name)
+                .append("(")
+                .append(String.join(",", arguments))
+                .append(")=")
+                .append(getExpression());
+        return sb.toString();
+        
     }
 
 }
