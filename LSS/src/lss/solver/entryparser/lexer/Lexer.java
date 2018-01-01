@@ -6,6 +6,7 @@
 package lss.solver.entryparser.lexer;
 
 import java.util.ArrayList;
+import java.util.InputMismatchException;
 
 /**
  *
@@ -18,6 +19,30 @@ public class Lexer {
     public Lexer(String input){
         string = input;
         lexemes = new ArrayList<>();
+    }
+    
+    public ArrayList<Token> tokenize(){
+        ArrayList<Token> tokens = new ArrayList<>();
+        StringIterator chars = new StringIterator(string);
+        String c;
+        while (chars.hasNext()){
+            c = chars.getChar();
+            Token t = null;
+            for (int i = 0; i< lexemes.size();i++){
+                t = scan(lexemes.get(i),i,chars);
+                if (t!=null){
+                    break;
+                }
+            }
+            if (t == null){
+                t = scan(lexemes.get(0),0,chars);
+            }
+            if (t==null){
+                throw new InputMismatchException("The symbol '"+c+"' is invalid.");
+            }
+            tokens.add(t);
+        }
+        return tokens;
     }
     
     private Token scan(ArrayList<Lexeme> lexemes,int size,StringIterator chars){
@@ -65,5 +90,21 @@ public class Lexer {
            }
        }
        return null;
+    }
+    
+    public void addLexemes(Lexeme[] lexs){
+        
+        for (Lexeme l : lexs){
+            int lexemeSize = l.size();
+            int lexerSize = lexemes.size();
+            
+            if (lexerSize-1<lexemeSize){
+                int top = lexemeSize - lexerSize +1;
+                for (int i=0;i<top;i++){
+                    lexemes.add(new ArrayList<>());
+                }
+            }
+            lexemes.get(lexemeSize).add(l);
+        }
     }
 }

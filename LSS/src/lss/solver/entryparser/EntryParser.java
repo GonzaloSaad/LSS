@@ -8,8 +8,6 @@ package lss.solver.entryparser;
 import java.util.ArrayList;
 import java.util.ArrayDeque;
 import java.util.Deque;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import lss.solver.mathematics.Function;
 
 /**

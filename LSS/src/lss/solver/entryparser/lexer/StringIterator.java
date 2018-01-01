@@ -20,7 +20,9 @@ public class StringIterator {
         string = s;
         current = 0;
     }
-
+    public String getChar(){
+        return getChars(DEFAULT_OFFSET);
+    }
     public String getChars(int offset) {
         int nextIndex = current + offset;
 

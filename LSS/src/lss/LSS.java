@@ -9,6 +9,7 @@ package lss;
 import lss.solver.Method;
 import lss.solver.Pivot;
 import lss.solver.SolverCore;
+import lss.solver.entryparser.lexer.FunctionLexer;
 import lss.solver.entryparser.lexer.Lexeme;
 
 
@@ -25,16 +26,14 @@ public class LSS {
         // TODO code application logic here
 //        double[] x = new double[]{-1, 3, 15};
 //        double[] y = new double[]{0, 20, 0};
-//        String input = "A1*sin(x)+A2*cos(x)*log(x+4)+3*A3*x";
+        String input = "A1*sin(x)+A2*cos(x)*log(x+4)+3.32*A3*x";
 //        
 //
 //        SolverCore s = new SolverCore(x, y, input, Method.GAUSS, Pivot.PARTIAL);
 //        System.out.println(s.getSteps());
         
-        Lexeme l = new Lexeme("test","\\(\\(");
-        System.out.println(l.size());
-        System.out.println(l);
-        
+        FunctionLexer l = new FunctionLexer(input);
+        System.out.println(l.tokenize());
         
     }
 
